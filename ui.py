@@ -132,7 +132,7 @@ class HomePage(BasePage):
         admin_profile_page = AdminProfilePage()
         admin_profile_page.mainloop()
         
-        
+    
 # Class for managing donors
 class ManageDonorsPage(BasePage):
     def __init__(self):
@@ -155,31 +155,17 @@ class ManageDonorsPage(BasePage):
         add_button = tk.Button(self, text="Add Donor", command=self.add_donor)
         add_button.pack(pady=10)
 
+        # Add button for updating donors
+        update_button = tk.Button(self, text="Update Donor", command=self.update_donor)
+        update_button.pack(pady=10)
+
+        # Add button for deleting donors
+        delete_button = tk.Button(self, text="Delete Donor", command=self.delete_donor)
+        delete_button.pack(pady=10)
+
         # Add button for going back to the home page
         back_button = tk.Button(self, text="Back to Home", command=self.back_to_home)
         back_button.pack(pady=10)
-
-    def populate_table(self):
-        try:
-            cursor = self.connection.cursor()
-            query = "SELECT * FROM Donors"
-            cursor.execute(query)
-            donors = cursor.fetchall()
-
-            # Clear existing items in the tree
-            for item in self.tree.get_children():
-                self.tree.delete(item)
-
-            # Insert data into the table
-            for donor in donors:
-                self.tree.insert("", "end", values=donor)
-
-        except Error as e:
-            print(f"Error: {e}")
-
-        finally:
-            if cursor:
-                cursor.close()
 
     def add_donor(self):
         # Create a new window for adding donors
@@ -212,6 +198,53 @@ class ManageDonorsPage(BasePage):
         name_entry.get(), age_entry.get(), blood_type_entry.get(), address_entry.get(), contact_number_entry.get()))
         save_button.grid(row=5, columnspan=2, pady=10)
 
+    def update_donor(self):
+        # Get the selected donor's information
+        selected_item = self.tree.selection()
+        if not selected_item:
+            messagebox.showwarning("No Selection", "Please select a donor to update.")
+            return
+
+        donor_info = self.tree.item(selected_item, 'values')
+        donor_id = donor_info[0]  # Assuming the donor ID is the first column
+
+        # Create a new window for updating donors
+        update_donor_window = tk.Toplevel(self)
+        update_donor_window.title("Update Donor")
+
+        # Entry fields for updating donors
+        name_entry = tk.Entry(update_donor_window)
+        age_entry = tk.Entry(update_donor_window)
+        blood_type_entry = tk.Entry(update_donor_window)
+        address_entry = tk.Entry(update_donor_window)
+        contact_number_entry = tk.Entry(update_donor_window)
+
+        # Labels for entry fields
+        tk.Label(update_donor_window, text="Name:").grid(row=0, column=0, padx=10, pady=5, sticky="e")
+        tk.Label(update_donor_window, text="Age:").grid(row=1, column=0, padx=10, pady=5, sticky="e")
+        tk.Label(update_donor_window, text="Blood Type:").grid(row=2, column=0, padx=10, pady=5, sticky="e")
+        tk.Label(update_donor_window, text="Address:").grid(row=3, column=0, padx=10, pady=5, sticky="e")
+        tk.Label(update_donor_window, text="Contact Number:").grid(row=4, column=0, padx=10, pady=5, sticky="e")
+
+        # Entry fields placement
+        name_entry.grid(row=0, column=1, padx=10, pady=5)
+        age_entry.grid(row=1, column=1, padx=10, pady=5)
+        blood_type_entry.grid(row=2, column=1, padx=10, pady=5)
+        address_entry.grid(row=3, column=1, padx=10, pady=5)
+        contact_number_entry.grid(row=4, column=1, padx=10, pady=5)
+
+        # Set the default values to the selected donor's information
+        name_entry.insert(0, donor_info[1])
+        age_entry.insert(0, donor_info[2])
+        blood_type_entry.insert(0, donor_info[3])
+        address_entry.insert(0, donor_info[4])
+        contact_number_entry.insert(0, donor_info[5])
+
+        # Button to save updated donor information
+        save_button = tk.Button(update_donor_window, text="Save Changes", command=lambda: self.save_updated_donor_info(
+        donor_id, name_entry.get(), age_entry.get(), blood_type_entry.get(), address_entry.get(), contact_number_entry.get()))
+        save_button.grid(row=5, columnspan=2, pady=10)
+        
     def save_donor_info_entry(self, name, age, blood_type, address, contact_number):
         try:
             cursor = self.connection.cursor()
@@ -233,11 +266,80 @@ class ManageDonorsPage(BasePage):
             if cursor:
                 cursor.close()
 
-    def back_to_home(self):
-        self.withdraw()
-        home_page = HomePage()
-        home_page.mainloop()
-        
+    def save_updated_donor_info(self, donor_id, name, age, blood_type, address, contact_number):
+        try:
+            cursor = self.connection.cursor()
+            query = "UPDATE Donors SET Name=%s, Age=%s, Blood_Type=%s, Address=%s, Contact_Number=%s WHERE Donor_ID=%s"
+            values = (name, age, blood_type, address, contact_number, donor_id)
+            cursor.execute(query, values)
+
+            self.connection.commit()
+            messagebox.showinfo("Success", "Donor information updated successfully!")
+
+            # Update the table with the updated donor information
+            self.populate_table()
+
+        except Error as e:
+            print(f"Error: {e}")
+            messagebox.showerror("Error", "Error updating donor information.")
+
+        finally:
+            if cursor:
+                cursor.close()
+
+    def delete_donor(self):
+        # Get the selected donor's information
+        selected_item = self.tree.selection()
+        if not selected_item:
+            messagebox.showwarning("No Selection", "Please select a donor to delete.")
+            return
+
+        donor_info = self.tree.item(selected_item, 'values')
+        donor_id = donor_info[0]  # Assuming the donor ID is the first column
+
+        # Confirm deletion with a message box
+        confirmation = messagebox.askyesno("Confirm Deletion", f"Are you sure you want to delete {donor_info[1]}?")
+        if confirmation:
+            try:
+                cursor = self.connection.cursor()
+                query = "DELETE FROM Donors WHERE Donor_ID=%s"
+                cursor.execute(query, (donor_id,))
+
+                self.connection.commit()
+                messagebox.showinfo("Success", "Donor deleted successfully!")
+
+                # Update the table after deletion
+                self.populate_table()
+
+            except Error as e:
+                print(f"Error: {e}")
+                messagebox.showerror("Error", "Error deleting donor.")
+
+            finally:
+                if cursor:
+                    cursor.close()
+
+    def populate_table(self):
+        try:
+            cursor = self.connection.cursor()
+            query = "SELECT * FROM Donors"
+            cursor.execute(query)
+            donors = cursor.fetchall()
+
+            # Clear existing items in the tree
+            for item in self.tree.get_children():
+                self.tree.delete(item)
+
+            # Insert data into the table
+            for donor in donors:
+                self.tree.insert("", "end", values=donor)
+
+        except Error as e:
+            print(f"Error: {e}")
+
+        finally:
+            if cursor:
+                cursor.close()
         
 # Class for managing donations
 class ManageDonationsPage(BasePage):
