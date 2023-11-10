@@ -136,49 +136,83 @@ class HomePage(BasePage):
 # Class for managing donors
 class ManageDonorsPage(BasePage):
     def __init__(self):
-        super().__init__('Manage Donors', '400x300')
+        super().__init__('Manage Donors', '600x400')
 
         label = tk.Label(self, text="Manage Donors Page", font=("Helvetica", 16))
         label.pack(pady=20)
 
-        self.name_label = tk.Label(self, text="Name:")
-        self.name_label.pack(pady=5)
-        self.name_entry = tk.Entry(self)
-        self.name_entry.pack(pady=5)
+        # Create a Treeview widget for the table
+        columns = ("Name", "Age", "Blood Type", "Address", "Contact Number")
+        self.tree = ttk.Treeview(self, columns=columns, show="headings")
+        for col in columns:
+            self.tree.heading(col, text=col)
+        self.tree.pack(pady=10)
 
-        self.age_label = tk.Label(self, text="Age:")
-        self.age_label.pack(pady=5)
-        self.age_entry = tk.Entry(self)
-        self.age_entry.pack(pady=5)
+        # Fetch and display existing donors in the table
+        self.populate_table()
 
-        self.blood_type_label = tk.Label(self, text="Blood Type:")
-        self.blood_type_label.pack(pady=5)
-        self.blood_type_entry = tk.Entry(self)
-        self.blood_type_entry.pack(pady=5)
+        # Add button for adding donors
+        add_button = tk.Button(self, text="Add Donor", command=self.add_donor)
+        add_button.pack(pady=10)
 
-        self.address_label = tk.Label(self, text="Address:")
-        self.address_label.pack(pady=5)
-        self.address_entry = tk.Entry(self)
-        self.address_entry.pack(pady=5)
-
-        self.contact_number_label = tk.Label(self, text="Contact Number:")
-        self.contact_number_label.pack(pady=5)
-        self.contact_number_entry = tk.Entry(self)
-        self.contact_number_entry.pack(pady=5)
-
-        save_button = tk.Button(self, text="Save Donor", command=self.save_donor_info)
-        save_button.pack(pady=10)
-
+        # Add button for going back to the home page
         back_button = tk.Button(self, text="Back to Home", command=self.back_to_home)
         back_button.pack(pady=10)
 
-    def save_donor_info(self):
-        name = self.name_entry.get()
-        age = self.age_entry.get()
-        blood_type = self.blood_type_entry.get()
-        address = self.address_entry.get()
-        contact_number = self.contact_number_entry.get()
+    def populate_table(self):
+        try:
+            cursor = self.connection.cursor()
+            query = "SELECT * FROM Donors"
+            cursor.execute(query)
+            donors = cursor.fetchall()
 
+            # Clear existing items in the tree
+            for item in self.tree.get_children():
+                self.tree.delete(item)
+
+            # Insert data into the table
+            for donor in donors:
+                self.tree.insert("", "end", values=donor)
+
+        except Error as e:
+            print(f"Error: {e}")
+
+        finally:
+            if cursor:
+                cursor.close()
+
+    def add_donor(self):
+        # Create a new window for adding donors
+        add_donor_window = tk.Toplevel(self)
+        add_donor_window.title("Add Donor")
+
+        # Entry fields for adding donors
+        name_entry = tk.Entry(add_donor_window)
+        age_entry = tk.Entry(add_donor_window)
+        blood_type_entry = tk.Entry(add_donor_window)
+        address_entry = tk.Entry(add_donor_window)
+        contact_number_entry = tk.Entry(add_donor_window)
+
+        # Labels for entry fields
+        tk.Label(add_donor_window, text="Name:").grid(row=0, column=0, padx=10, pady=5, sticky="e")
+        tk.Label(add_donor_window, text="Age:").grid(row=1, column=0, padx=10, pady=5, sticky="e")
+        tk.Label(add_donor_window, text="Blood Type:").grid(row=2, column=0, padx=10, pady=5, sticky="e")
+        tk.Label(add_donor_window, text="Address:").grid(row=3, column=0, padx=10, pady=5, sticky="e")
+        tk.Label(add_donor_window, text="Contact Number:").grid(row=4, column=0, padx=10, pady=5, sticky="e")
+
+        # Entry fields placement
+        name_entry.grid(row=0, column=1, padx=10, pady=5)
+        age_entry.grid(row=1, column=1, padx=10, pady=5)
+        blood_type_entry.grid(row=2, column=1, padx=10, pady=5)
+        address_entry.grid(row=3, column=1, padx=10, pady=5)
+        contact_number_entry.grid(row=4, column=1, padx=10, pady=5)
+
+        # Button to save donor information
+        save_button = tk.Button(add_donor_window, text="Save Donor", command=lambda: self.save_donor_info_entry(
+        name_entry.get(), age_entry.get(), blood_type_entry.get(), address_entry.get(), contact_number_entry.get()))
+        save_button.grid(row=5, columnspan=2, pady=10)
+
+    def save_donor_info_entry(self, name, age, blood_type, address, contact_number):
         try:
             cursor = self.connection.cursor()
             query = "INSERT INTO Donors (Name, Age, Blood_Type, Address, Contact_Number) VALUES (%s, %s, %s, %s, %s)"
@@ -188,6 +222,9 @@ class ManageDonorsPage(BasePage):
             self.connection.commit()
             messagebox.showinfo("Success", "Donor information saved successfully!")
 
+            # Update the table with the new donor
+            self.populate_table()
+
         except Error as e:
             print(f"Error: {e}")
             messagebox.showerror("Error", "Error saving donor information.")
@@ -195,13 +232,6 @@ class ManageDonorsPage(BasePage):
         finally:
             if cursor:
                 cursor.close()
-
-        # Clear the entry fields after saving
-        self.name_entry.delete(0, 'end')
-        self.age_entry.delete(0, 'end')
-        self.blood_type_entry.delete(0, 'end')
-        self.address_entry.delete(0, 'end')
-        self.contact_number_entry.delete(0, 'end')
 
     def back_to_home(self):
         self.withdraw()
