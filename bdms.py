@@ -36,36 +36,31 @@ class BasePage(tk.Tk):
 
 
 # Class for the login page
+# Class for the login page
 class LoginPage(BasePage):
     def __init__(self):
-        super().__init__('Login', '1920x1080')
+        super().__init__('Login', '850x500')
 
         self.login_frame = Frame(self, background="white")
         self.login_frame.pack(expand=20)
 
-        self.heading = Label(self.login_frame, text='Login', fg='#57a1f8', bg='white', font=('Arial', 23, 'bold'))
-        self.heading.grid(row=0, column=0, columnspan=2)
+        self.heading = Label(self.login_frame, text='Login', fg='#df4145', bg='white', font=('Arial', 23, 'bold'))
+        self.heading.grid(row=1, column=1, pady=(20, 0))  # Using grid for the heading with some padding
 
-        self.img = PhotoImage(file='login.png')
-        Label(self.login_frame, image=self.img, bg='white').grid(rowspan=2, column=0)
+        self.img = PhotoImage(file='bdmsss.png')
+        Label(self.login_frame, image=self.img, bg='white').grid(row=1, column=0, rowspan=3, padx=(20, 0))  # Using grid for the image with some padding
 
-        self.user = Entry(self.login_frame, width=25, fg='black', border=0, bg="white", font=('Microsoft Yahei UI Light', 11))
-        self.user.grid(row=1, column=1)
-        self.user.insert(0, 'Username')
-        self.user.bind('<FocusIn>', self.on_enter_user)
-        self.user.bind('<FocusOut>', self.on_leave_user)
+        self.user = Entry(self.login_frame, width=25, fg='#df4145', border=0, bg="white", font=('Microsoft Yahei UI Light', 11))
+        self.user.place(x=420, y=120)  # Using grid for the username entry
 
-        Frame(self.login_frame, width=200, height=2, bg='black').place(x=420, y=140)
-        Frame(self.login_frame, width=200, height=2, bg='black').place(x=420, y=235)
+        Frame(self.login_frame, width=200, height=2, bg='black').place(x=420, y=150)  # Using grid for the first horizontal line
 
-        self.code = Entry(self.login_frame, width=25, fg='black', border=0, bg="white", font=('Microsoft Yahei UI Light', 11))
-        self.code.grid(row=2, column=1, sticky="n")
-        self.code.insert(0, 'Password')
-        self.code.bind('<FocusIn>', self.on_enter_code)
-        self.code.bind('<FocusOut>', self.on_leave_code)
+        self.code = Entry(self.login_frame, width=25, fg='#df4145', border=0, bg="white", font=('Microsoft Yahei UI Light', 11))
+        self.code.grid(row=3, column=1, pady=10)  # Using grid for the password entry
 
-        Button(self.login_frame, width=39, pady=7, text='Login', bg='#57a1f8', fg='white', border=0, command=self.signin).grid(
-            row=3, column=1, columnspan=2)
+        Frame(self.login_frame, width=200, height=2, bg='black').place(x=420, y=230)  # Using grid for the second horizontal line
+
+        Button(self.login_frame, width=20, pady=7, text='Login', bg='#00ff00', fg='#df4145', border=0, command=self.signin).grid(row=3, column=1, pady=(190, 20))
 
     def on_enter_user(self, e):
         if (self.user.get() == 'Username'):
