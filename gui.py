@@ -1,80 +1,68 @@
-from tkinter import *
-from tkinter import messagebox
+# Class for the login page
+class LoginPage(BasePage):
+    def __init__(self):
+        super().__init__('Login', '850x500')
 
-root=Tk()
-root.title('Login')
-root.geometry('925x500+300+200')
-root.configure(bg="#fff")
-root.resizable(False,False)
+        self.login_frame = Frame(self, background="white")
+        self.login_frame.pack(expand=20)
 
-def signin():
-    username=user.get()
-    password=code.get()
+        self.heading = Label(self.login_frame, text='Login', fg='#df4145', bg='white', font=('MonoLisa', 23, 'bold'))
+        self.heading.grid(row=1, column=1, pady=(20, 0))  # Using grid for the heading with some padding
 
-    if username == 'admin' and password == '1234':
-        screen=Toplevel(root)
-        screen.title("App")
-        screen.geometry('925x500+500+300+200')
-        screen.config(bg="white")
+        self.img = PhotoImage(file='bdmsss.png')
+        Label(self.login_frame, image=self.img, bg='white').grid(row=1, column=0, rowspan=3, padx=(20, 0))  # Using grid for the image with some padding
 
-        Label(screen,text='Blood Donation Management System', bg='#fff',font=('Times New Roman',50,'bold')).pack(expand=True)
-
-        screen.mainloop()
+        self.user = Entry(self.login_frame, width=25, fg='#df4145', border=0, bg="white", font=('Microsoft Yahei UI Light', 11))
+        self.user.place(x=430, y=120)  # Using grid for the username entry
         
-    elif username != 'admin' and password != '1234':
-        messagebox.showerror("Invalid", "Invalid username and password")
+        self.user.insert(0, 'Username')
+        self.user.bind('<FocusIn>', self.on_enter_user)
+        self.user.bind('<FocusOut>', self.on_leave_user)
 
-img = PhotoImage(file='login.png')
-Label(root,image=img,bg='white').place(x=50,y=50)
+        Frame(self.login_frame, width=200, height=2, bg='black').place(x=430, y=150)  # Using grid for the first horizontal line
 
-frame=Frame(root,width=350,height=350,bg='white')
-frame.place(x=480,y=70)
+        self.code = Entry(self.login_frame, width=25, fg='#df4145', border=0, bg="white", font=('Microsoft Yahei UI Light', 11))
+        self.code.grid(row=3, column=1, pady=10)  # Using grid for the password entry
+        
+        self.code.place(x=430,y=200)
+        self.code.insert(0, 'Password')
+        self.code.bind('<FocusIn>', self.on_enter_code)
+        self.code.bind('<FocusOut>', self.on_leave_code)
 
-heading=Label(frame,text='Sign in',fg='#57a1f8',bg='white',font=('Arial',23,'bold'))
-heading.place(x=100,y=5)
+        Frame(self.login_frame, width=200, height=2, bg='black').place(x=430, y=230)  # Using grid for the second horizontal line
 
-#########-
-def on_enter(e):
-    user.delete(0,'end')
+        Button(self.login_frame, width=22, pady=7, text='Login', bg='#df4145', fg='white', border=0, command=self.signin).grid(row=3, column=1, pady=(190, 20))
 
-def on_leave(e):
-    name=user.get()
-    if name=='':
-        user.insert(0,'Username')
+    def on_enter_user(self, e):
+        if (self.user.get() == 'Username'):
+            self.user.delete(0, 'end')
 
+    def on_leave_user(self, e):
+        name = self.user.get()
+        if name == '':
+            self.user.insert(0, 'Username')
 
-user = Entry(frame,width=25, fg='black',border=0,bg="white", font=('Microsoft Yahei UI Light', 11))
-user.place(x=30, y=80) 
-user. insert (0, 'Username')
-user.bind('<FocusIn>', on_enter)
-user.bind('<FocusOut>', on_leave)
+    def on_enter_code(self, e):
+        if (self.code.get() == 'Password'):
+            self.code.delete(0, 'end')
+        self.code.config(show='*')
 
-Frame(frame,width=295, height=2,bg='black').place(x=25,y=107)
+    def on_leave_code(self, e):
+        name = self.code.get()
+        if name == '':
+            self.code.config(show='')  
+            self.code.insert(0, 'Password')
 
-##井#井#####＃--
-def on_enter(e):
-    code.delete(0,'end')
+    def signin(self):
+        username = self.user.get()
+        password = self.code.get()
 
-def on_leave(e):
-    name=code.get()
-    if name=='':
-        code.insert(0,'Password')
+        if username == 'admin' and password == '1234':
+            self.open_home_page()
+        else:
+            messagebox.showerror("Invalid", "Invalid username and password")
 
-
-code = Entry(frame,width=25,fg='black',border=0,bg="white",font=('Microsoft Yahei UI Light', 11))
-code.place (x=30,y=150)
-code.insert (0, 'Password')
-code.bind('<FocusIn>', on_enter)
-code.bind('<FocusOut>', on_leave)
-
-Frame(frame, width=295, height=2,bg='black').place(x=25,y=177)
-#井＃＃＃＃＃＃＃＃＃＃井井井井井井井井井井井井井井井＃井＃井＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃＃井###
-
-Button(frame,width=39,pady=7,text='Sign in',bg='#57a1f8',fg='white',border=0,command=signin).place(x=35,y=204)
-label=Label(frame, text="Don't have an account?",fg='black',bg='white',font=('Microsoft YaHei UI Light' ,9)) 
-label.place (x=75, y=270)
-
-sign_up= Button(frame,width=6,text='Sign up',border=0,bg='white',cursor='hand' ,fg='#57a1f8',command=signin)
-sign_up.place (x=215,y=270)
-
-root.mainloop()
+    def open_home_page(self):
+        self.destroy()
+        home_page = HomePage()
+        home_page.mainloop()
