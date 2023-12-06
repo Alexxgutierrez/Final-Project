@@ -6,10 +6,10 @@ import tkcalendar as tkc
 from datetime import datetime
 import mysql.connector
 from mysql.connector import Error
-from tkinter import PhotoImage
+from tkinter import PhotoImage, font
 
 # Base class for creating Tkinter application pages
-class BasePage(tk.Tk):
+class BasePage(tk.Tk): 
     def __init__(self, title, geometry):
         super().__init__()
         self.title(title)
@@ -21,7 +21,7 @@ class BasePage(tk.Tk):
         try:
             self.connection = mysql.connector.connect(
                 host="localhost",
-                user="admin",
+                user="root",
                 password="",
                 database="Blood_DB"
             )
@@ -105,44 +105,77 @@ class LoginPage(BasePage):
         home_page = HomePage()
         home_page.mainloop()
         
-        
-# Class for the home page
+# Class for the home page  
 class HomePage(BasePage):
     def __init__(self):
         super().__init__('HomePage', '1920x1080')
 
         self.sidebar_frame = Frame(self, bg='#353A40', width=200)
         self.sidebar_frame.pack(side=LEFT, fill=Y)
-        
-        self.topbar_frame= Frame(self, bg='#df4145', width=200, height=75)
+
+        self.topbar_frame = Frame(self, bg='#df4145', height=75)
         self.topbar_frame.pack(side=TOP, fill=X)
-        
+
         logo_image = PhotoImage(file="bdmslogo.png")
-        
+
         logo_label = Label(self.sidebar_frame, image=logo_image, bg='#353A40')
         logo_label.image = logo_image
-        logo_label.grid(row=0, column=0, sticky="nw",padx=10,pady=5)
-        
-        self.content_frame = Frame(self, bg='white', width=700, height=400)
+        logo_label.grid(row=0, column=0, sticky="nw", padx=40, pady=5)
+
+        self.content_frame = Frame(self, bg='#E5E4E2', width=700, height=400)
         self.content_frame.pack_propagate(False)
         self.content_frame.pack(side=LEFT, fill=BOTH, expand=True)  # Content frame to display tables
 
-        dashboard_button = tk.Button(self.sidebar_frame, text="Dashboard", command=self.show_dashboard, height = 2, width=15)
-        dashboard_button.grid(row=1, column=0, pady=(20,50))
-        
-        manage_donors_button = tk.Button(self.sidebar_frame, text="Donors", command=self.open_manage_donors, height=2, width=15)
-        manage_donors_button.grid(row=2, column=0, pady=50)
+        button_font = font.Font(family='Verdana', size=12)
 
-        manage_donations_button = tk.Button(self.sidebar_frame, text="Donations", command=self.open_manage_donations, height=2, width=15)
-        manage_donations_button.grid(row=3, column=0, pady=50)
+        self.selected_button = None  # Variable to keep track of the selected button
 
-        logout_button = tk.Button(self.sidebar_frame, text="Logout", command=self.logout, height=2, width=15)
-        logout_button.grid(row=4, column=0, pady=50)
-        
+        dashboard_button = tk.Button(self.sidebar_frame, text="DASHBOARD", command=lambda: self.handle_button_click(self.show_dashboard, dashboard_button), fg='#df4145', bg='white', height=2, width=15, font=button_font, relief='flat')
+        dashboard_button.grid(row=1, column=0, pady=(20, 25))
+
+        manage_donors_button = tk.Button(self.sidebar_frame, text="DONORS", command=lambda: self.handle_button_click(self.open_manage_donors, manage_donors_button), fg='#df4145', bg='white', height=2, width=15, font=button_font, relief='flat')
+        manage_donors_button.grid(row=2, column=0, pady=25)
+
+        manage_donations_button = tk.Button(self.sidebar_frame, text="DONATIONS", command=lambda: self.handle_button_click(self.open_manage_donations, manage_donations_button), bg='white', fg='#df4145', height=2, width=15, font=button_font, relief='flat')
+        manage_donations_button.grid(row=3, column=0, pady=25)
+
+        logout_button = tk.Button(self.sidebar_frame, text="LOGOUT", command=lambda: self.handle_button_click(self.logout, logout_button), fg='#df4145', bg='white', height=2, width=15, font=button_font, relief='flat')
+        logout_button.grid(row=4, column=0, pady=25)
+
+        self.heading_label = tk.Label(self.topbar_frame, text="DASHBOARD    ", font=("Helvetica", 37), bg='#df4145',fg='white')
+        self.heading_label.pack(side=tk.LEFT, padx=20, pady=20)
+
         self.show_dashboard()
 
+    def highlight_button(self, button):
+        # Reset the background color of the previously selected button
+        if self.selected_button:
+            self.selected_button.config(bg='white')
+
+        # Highlight the clicked button
+        button.config(bg='#00FFFF')  # You can use any color for highlighting
+        self.selected_button = button
+
+    def handle_button_click(self, callback, button):
+        # Reset the background color of the previously selected button
+        if self.selected_button:
+            self.selected_button.config(bg='white')
+
+        # Check if the clicked button is the logout button
+        if button.cget("text") != "LOGOUT":
+            # Highlight the clicked button
+            button.config(bg='#a4e9d5')  # You can use any color for highlighting
+            self.selected_button = button
+
+            # Set the heading label based on the clicked button
+            page_title = button.cget("text")
+            self.heading_label.config(text=page_title)
+
+        # Call the corresponding method
+        callback()
+
     def show_dashboard(self):
-        # Calculate total donations for each blood type
+        # Calculate total donations for each blood type 
         blood_type_donations = self.calculate_blood_type_donations()
 
         # Clear existing items in the display frame
@@ -160,27 +193,29 @@ class HomePage(BasePage):
             row = i // 4  # Calculate the row based on the index
             col = i % 4   # Calculate the column based on the index
 
-            frame = Frame(self.content_frame, bg='white', width=200, height=105, bd=2, relief="groove")
+            frame = Frame(self.content_frame, bg='#E0FFFF', width=200, height=105, bd=2, relief="groove")
             frame.pack_propagate(False)
             frame.grid(row=row, column=col, padx=55, pady=60)
 
             # Add blood drop image
-            blood_label = Label(frame, image=blood_image, bg='white')
+            blood_label = Label(frame, image=blood_image, bg='#E0FFFF')
             blood_label.image = blood_image
             blood_label.place(x=160,y=5)
 
             # Add blood type label with bold text
-            type_label = Label(frame, text=blood_type, font=("Helvetica", 16, "bold"), bg='white')
+            type_label = Label(frame, text=blood_type, font=("Helvetica", 16, "bold"), bg='#E0FFFF')
             type_label.place(x=115, y=10)
 
             # Add donation amount label with anchor set to "sw"
-            amount_label = Label(frame, text=f"{blood_type_donations.get(blood_type, 0)} mL", bg='white')
+            amount_label = Label(frame, text=f"{blood_type_donations.get(blood_type, 0)} mL", bg='#E0FFFF')
             amount_label.place(x=2, y=80)
 
         # Ensure that the grid expands to fill any extra space
         self.content_frame.grid_columnconfigure(4, weight=1)
 
     def calculate_blood_type_donations(self):
+        
+        cursor = None
         try:
             cursor = self.connection.cursor()
             query = "SELECT DISTINCT Blood_Type, SUM(Amount) AS Total_Amount FROM Blood_Donations GROUP BY Blood_Type"
@@ -206,7 +241,7 @@ class HomePage(BasePage):
     # Inside the Dashboard class
     def open_manage_donors(self):
         self.content_frame.pack_forget()
-        self.content_frame = Frame(self, bg='white', width=600, height=400)
+        self.content_frame = Frame(self, bg='#E5E4E2', width=600, height=400)
         self.content_frame.pack_propagate(False)
         self.content_frame.pack(side=LEFT, fill=BOTH, expand=True)
 
@@ -216,7 +251,7 @@ class HomePage(BasePage):
 
     def open_manage_donations(self):
         self.content_frame.pack_forget()
-        self.content_frame = Frame(self, bg='white', width=600, height=400)
+        self.content_frame = Frame(self, bg='#E5E4E2', width=600, height=400)
         self.content_frame.pack_propagate(False)
         self.content_frame.pack(side=LEFT, fill=BOTH, expand=True)
 
@@ -224,8 +259,13 @@ class HomePage(BasePage):
         manage_donations_page.pack(fill=BOTH, expand=True)
 
     def logout(self):
-        self.destroy()
-        LoginPage().mainloop()
+        # Display a confirmation message before logging out
+        confirm_logout = messagebox.askyesno("Logout", "Are you sure you want to log out?")
+        
+        if confirm_logout:
+            # If the user confirms, destroy the current window and show the login page
+            self.destroy()
+            LoginPage().mainloop()
         
     
 # Class for managing donors
@@ -242,9 +282,6 @@ class ManageDonorsPage(Frame):
         self.blood_type = None
         self.address_entry = None
         self.contact_number_entry = None
-        
-        label = tk.Label(self, text="Manage Donors", font=("Helvetica", 16))
-        label.pack(pady=20)
 
         # Create a Treeview widget for the table
         columns = ("Donor ID", "Name", "Sex", "Age", "Blood Type", "Address", "Contact Number")
@@ -255,43 +292,50 @@ class ManageDonorsPage(Frame):
             self.tree.heading(col, text=col, anchor=tk.CENTER)
 
         # column widths
-        self.tree.column("Donor ID", width=80)  
-        self.tree.column("Name", width=200)  
-        self.tree.column("Sex", width=90)  
-        self.tree.column("Age", width=90)
-        self.tree.column("Blood Type", width=90)  
-        self.tree.column("Address", width=200)  
-        self.tree.column("Contact Number", width=150)  
+        self.tree.column("Donor ID", width=100)  
+        self.tree.column("Name", width=250)  
+        self.tree.column("Sex", width=100)  
+        self.tree.column("Age", width=100)
+        self.tree.column("Blood Type", width=100)  
+        self.tree.column("Address", width=250)  
+        self.tree.column("Contact Number", width=200)  
 
         for col in columns:
             self.tree.heading(col, text=col)
-        self.tree.pack(pady=10)
+            
+        # Define tag configurations for colors
+        self.tree.tag_configure("evenrow", background="#d32d41", foreground="#E0FFFF")
+        self.tree.tag_configure("oddrow", background="#E0FFFF", foreground="#d32d41")
+        
+        # Adjust the placement of the table freely
 
+        self.tree.pack(pady=20) 
+        self.tree.place(x=50, y=50)
         # Fetch and display existing donors in the table
         self.populate_table()
-
-        # Add button for adding donors
-        add_button = tk.Button(self, text="Add Donor", command=self.add_donor)
-        add_button.pack(pady=10)
-
-        # Add button for updating donors
-        update_button = tk.Button(self, text="Update Donor", command=self.update_donor)
-        update_button.pack(pady=10)
-
-        # Add button for deleting donors
-        delete_button = tk.Button(self, text="Delete Donor", command=self.delete_donor)
-        delete_button.pack(pady=10)
         
-        # Create input fields for search and filtering
-        self.blood_type_filter_entry = tk.Entry(self)
+        style = ttk.Style()
+        style.configure('Blood.TButton', foreground='#353A40', background='#df4145', font=('Arial', 12, 'bold'))
 
+        # Add buttons for adding, updating, deleting donors, and apply filters
+        add_button = ttk.Button(self, text="Add Donor", command=self.add_donor, style='Blood.TButton')
+        update_button = ttk.Button(self, text="Update Donor", command=self.update_donor, style='Blood.TButton')
+        delete_button = ttk.Button(self, text="Delete Donor", command=self.delete_donor, style='Blood.TButton')
+        filter_button = ttk.Button(self, text="Filter by Blood Type", command=self.apply_filters, style='Blood.TButton')
+
+        # Pack buttons horizontally
+        add_button.place(x=115, y=320)
+        update_button.place(x=360, y=320)
+        delete_button.place(x=640, y=320) 
+        filter_button.place(x=925, y=320)
+
+        # Create input field for filtering
+        self.blood_type_filter_entry = ttk.Combobox(self, values=["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"])
+        self.blood_type_filter_entry.configure(state='readonly')  #para di type
+        
         # Labels for filter fields
-        tk.Label(self, text="Filter by Blood Type:").pack()
-        self.blood_type_filter_entry.pack()
-
-        # Button to apply filters
-        filter_button = tk.Button(self, text="Apply Filter", command=self.apply_filters)
-        filter_button.pack(pady=10)
+        self.blood_type_filter_entry.place(x=925, y=360)
+        #tk.Label(self, text="Filter by Blood Type").place(x=950, y=330)
 
     def apply_filters(self):
         # Retrieve filter criteria
@@ -300,6 +344,12 @@ class ManageDonorsPage(Frame):
         # Perform filtering based on criteria
         try:
             cursor = self.connection.cursor()
+
+            # Set up tag configurations for even and odd rows
+            self.tree.tag_configure("evenrow", background="#d32d41", foreground="#E0FFFF", anchor='center')
+            self.tree.tag_configure("oddrow", background="#E0FFFF", foreground="#d32d41", anchor='center')
+
+            # Fetch and display existing donors in the table
             query = "SELECT Donor_ID, Name, Sex, Age, Blood_Type, Address, Contact_Number FROM donors WHERE Blood_Type=%s"
             cursor.execute(query, (blood_type_filter,))
             filtered_donors = cursor.fetchall()
@@ -308,16 +358,17 @@ class ManageDonorsPage(Frame):
             for item in self.tree.get_children():
                 self.tree.delete(item)
 
-            # Insert filtered data into the table
-            for donor in filtered_donors:
-                self.tree.insert("", "end", values=donor)
+            # Insert filtered data into the table with alternating row colors
+            for i, donor in enumerate(filtered_donors):
+                row_tags = ('evenrow',) if i % 2 == 0 else ('oddrow',)
+                self.tree.insert("", "end", values=donor, tags=row_tags)
 
         except Error as e:
-                print(f"Error: {e}")
+            print(f"Error: {e}")
 
         finally:
-                if cursor:
-                    cursor.close()
+            if cursor:
+                cursor.close()
 
     def add_donor(self):
         # Create a new window for adding donors
@@ -538,15 +589,21 @@ class ManageDonorsPage(Frame):
             # Clear existing items in the tree
             for item in self.tree.get_children():
                 self.tree.delete(item)
-
+                
             # Set up center alignment for columns
             center_columns = ("Donor ID", "Name", "Sex", "Age", "Blood Type", "Address", "Contact Number")
             for col in center_columns:
                 self.tree.column(col, anchor='center')
 
-            # Insert data into the table with center alignment
-            for donor in donors:
-                self.tree.insert("", "end", values=donor, tags=('center',))
+            # Set up tag configurations for even and odd rows
+            self.tree.tag_configure("evenrow", background="#d32d41", foreground="#E0FFFF", anchor='center')
+            self.tree.tag_configure("oddrow", background="#E0FFFF", foreground="#d32d41", anchor='center')
+
+            # Insert data into the table with appropriate tags
+            for i, donor in enumerate(donors):
+                row_tags = ('evenrow',) if i % 2 == 0 else ('oddrow',)
+                self.tree.insert("", "end", values=donor, tags=row_tags)
+
 
         except Error as e:
             print(f"Error: {e}")
@@ -570,51 +627,53 @@ class ManageDonationsPage(Frame):
         self.donation_date = None
         self.blood_amount = None
 
-        label = tk.Label(self, text="Manage Donations", font=("Helvetica", 16))
-        label.pack(pady=20)
-
         # Create a Treeview widget for the table
         columns = ("Donation ID", "Name", "Sex", "Blood Type", "Date of Donation", "Amount (ml)")
         self.tree = ttk.Treeview(self, columns=columns, show="headings")
         
-        # Adjusting column headings alignment
+       # Adjusting column headings alignment
         for col in columns:
             self.tree.heading(col, text=col, anchor=tk.CENTER)
 
         # Set column widths for specific columns
-        self.tree.column("Donation ID", width=80) 
-        self.tree.column("Name", width=200)
+        self.tree.column("Donation ID", width=100) 
+        self.tree.column("Name", width=250)
         self.tree.column("Sex", width=100)
         self.tree.column("Blood Type", width=100)
-        self.tree.column("Date of Donation", width=200)
-        self.tree.column("Amount (ml)", width=120)
+        self.tree.column("Date of Donation", width=250)
+        self.tree.column("Amount (ml)", width=170)
         
         for col in columns:
             self.tree.heading(col, text=col)
-        self.tree.pack(pady=10)
+            
+        # Define tag configurations for colors
+        self.tree.tag_configure("evenrow", background="#d32d41", foreground="#E0FFFF")
+        self.tree.tag_configure("oddrow", background="#E0FFFF", foreground="#d32d41")
         
-        # Add button for adding donors
-        add_button = tk.Button(self, text="Add Donation", command=self.add_donation)
-        add_button.pack(pady=10)
-
-        # Add button for updating donors
-        update_button = tk.Button(self, text="Update Donation", command=self.update_donation)
-        update_button.pack(pady=10)
-
-        # Add button for deleting donors
-        delete_button = tk.Button(self, text="Delete Donation", command=self.delete_donation)
-        delete_button.pack(pady=10)
+        self.tree.pack(pady=20)
+        self.tree.place(x=115,y=50)
         
-        # Create input fields for search and filtering
-        self.blood_type_filter_entry = tk.Entry(self)
+        style = ttk.Style()
+        style.configure('Blood.TButton', foreground='#353A40', background='#df4145', font=('Arial', 12, 'bold'))
+        
+         # Add buttons for adding, updating, deleting donors, and apply filters
+        add_button = ttk.Button(self, text="Add Donation", command=self.add_donation, style='Blood.TButton')
+        update_button = ttk.Button(self, text="Update Donation", command=self.update_donation, style='Blood.TButton')
+        delete_button = ttk.Button(self, text="Delete Donation", command=self.delete_donation, style='Blood.TButton')
+        filter_button = ttk.Button(self, text="Filter by Blood Type", command=self.apply_filters, style='Blood.TButton')
 
+        # Pack buttons horizontally
+        add_button.place(x=115, y=320)
+        update_button.place(x=360, y=320)
+        delete_button.place(x=640, y=320) 
+        filter_button.place(x=925, y=320)
+
+        # Create input field for filtering
+        self.blood_type_filter_entry = ttk.Combobox(self, values=["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"])
+        self.blood_type_filter_entry.configure(state='readonly')  #para di type
+        
         # Labels for filter fields
-        tk.Label(self, text="Filter by Blood Type:").pack()
-        self.blood_type_filter_entry.pack()
-
-        # Button to apply filters
-        filter_button = tk.Button(self, text="Apply Filter", command=self.apply_filters)
-        filter_button.pack(pady=10)
+        self.blood_type_filter_entry.place(x=925, y=360)
 
         # Populate the table initially
         self.populate_table()
@@ -850,9 +909,14 @@ class ManageDonationsPage(Frame):
             for item in self.tree.get_children():
                 self.tree.delete(item)
 
-            # Insert filtered data into the table
-            for donor in filtered_donors:
-                self.tree.insert("", "end", values=donor)
+            # Set up tag configurations for even and odd rows
+            self.tree.tag_configure("evenrow", background="#d32d41", foreground="#E0FFFF", anchor='center')
+            self.tree.tag_configure("oddrow", background="#E0FFFF", foreground="#d32d41", anchor='center')
+
+            # Insert data into the table with appropriate tags
+            for i, donor in enumerate(filtered_donors):
+                row_tags = ('evenrow',) if i % 2 == 0 else ('oddrow',)
+                self.tree.insert("", "end", values=donor, tags=row_tags)
 
         except Error as e:
                 print(f"Error: {e}")
@@ -878,10 +942,14 @@ class ManageDonationsPage(Frame):
             for col in center_columns:
                 self.tree.column(col, anchor='center')
 
-            # Insert data into the table with center alignment
-            for donation in donations:
-                values = donation[0], donation[1], donation[2], donation[3], donation[4], donation[5]
-                self.tree.insert("", "end", values=values, tags=('center',))
+             # Set up tag configurations for even and odd rows
+            self.tree.tag_configure("evenrow", background="#d32d41", foreground="#E0FFFF", anchor='center')
+            self.tree.tag_configure("oddrow", background="#E0FFFF", foreground="#d32d41", anchor='center')
+
+            # Insert data into the table with appropriate tags
+            for i, donor in enumerate(donations):
+                row_tags = ('evenrow',) if i % 2 == 0 else ('oddrow',)
+                self.tree.insert("", "end", values=donor, tags=row_tags)
 
         except Error as e:
             print(f"Error: {e}")
@@ -890,7 +958,6 @@ class ManageDonationsPage(Frame):
             if cursor:
                 cursor.close()
 
-        
 if __name__ == "__main__":
     login_page = LoginPage()
     login_page.mainloop()
